@@ -1,0 +1,181 @@
+<!DOCTYPE html>
+<html lang="pl">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>11cards — Sklep z kartami sportowymi</title>
+<style>
+  *{box-sizing:border-box;margin:0;padding:0;font-family:"Poppins",sans-serif}
+  body{background:#f6f7fb;color:#222;min-height:100vh;display:flex;flex-direction:column;}
+  header{background:linear-gradient(90deg,#ff6a00,#ee0979);color:#fff;padding:1rem 2rem;display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;}
+  .logo{font-size:1.8rem;font-weight:700;}
+  nav{display:flex;gap:1rem;flex-wrap:wrap;}
+  nav button{background:rgba(255,255,255,0.2);border:none;color:#fff;padding:0.5rem 1rem;border-radius:6px;cursor:pointer;font-size:0.95rem;transition:0.2s;}
+  nav button:hover,nav button.active{background:#fff;color:#ff0066;}
+  main{flex:1;padding:2rem;max-width:1200px;margin:auto;}
+  section{display:none;}
+  section.active{display:block;animation:fadeIn 0.5s;}
+  @keyframes fadeIn{from{opacity:0;}to{opacity:1;}}
+  .products{display:grid;grid-template-columns:repeat(auto-fit,minmax(250px,1fr));gap:1.5rem;}
+  .card{background:#fff;border-radius:12px;box-shadow:0 4px 12px rgba(0,0,0,0.1);overflow:hidden;transition:transform 0.2s;}
+  .card:hover{transform:translateY(-4px);}
+  .card img{width:100%;height:180px;object-fit:cover;}
+  .card-content{padding:1rem;}
+  .card h3{font-size:1.1rem;margin-bottom:0.5rem;}
+  .card p{font-size:0.9rem;color:#555;margin-bottom:0.5rem;}
+  .price{font-weight:600;color:#ff0066;margin-bottom:0.5rem;}
+  .btn{background:#ff0066;color:#fff;border:none;padding:0.6rem 1rem;border-radius:6px;cursor:pointer;font-size:0.9rem;transition:0.2s;}
+  .btn:hover{background:#e6005a;}
+  footer{background:#222;color:#fff;text-align:center;padding:1rem;margin-top:auto;font-size:0.9rem;}
+  /* Koszyk */
+  #cart{background:#fff;border-radius:12px;box-shadow:0 4px 12px rgba(0,0,0,0.1);padding:1rem;}
+  #cart table{width:100%;border-collapse:collapse;}
+  #cart th,#cart td{text-align:left;padding:0.5rem;}
+  #cart th{border-bottom:2px solid #ddd;}
+  #cart td{border-bottom:1px solid #eee;}
+  #cart tfoot td{font-weight:bold;}
+  .pay-btn{background:#00b140;color:#fff;border:none;padding:0.8rem 1.2rem;border-radius:6px;cursor:pointer;margin-top:1rem;font-size:1rem;}
+  .pay-btn:hover{background:#009632;}
+</style>
+</head>
+<body>
+
+<header>
+  <div class="logo">11cards</div>
+  <nav>
+    <button class="nav-btn active" data-target="home">Strona główna</button>
+    <button class="nav-btn" data-target="single">Single Cards</button>
+    <button class="nav-btn" data-target="live">Live Break</button>
+    <button class="nav-btn" data-target="addons">Dodatki</button>
+    <button class="nav-btn" data-target="cart-section">🛒 Koszyk (<span id="cart-count">0</span>)</button>
+  </nav>
+</header>
+
+<main>
+  <section id="home" class="active">
+    <h2>Witamy w 11cards!</h2>
+    <p>Twój sklep z kartami sportowymi — piłkarskimi, koszykarskimi i kolekcjonerskimi. Sprawdź nasze Single Cards, dołącz do Live Breaków i uzupełnij swoją kolekcję dodatkami!</p>
+  </section>
+
+  <section id="single">
+    <h2>Single Cards</h2>
+    <div class="products" id="single-list"></div>
+  </section>
+
+  <section id="live">
+    <h2>Live Break</h2>
+    <p>Dołącz do naszych transmisji na żywo i otwieraj paczki razem z innymi kolekcjonerami!</p>
+    <p>Nowe terminy live breaków już wkrótce — śledź nasze social media!</p>
+  </section>
+
+  <section id="addons">
+    <h2>Dodatki do kart</h2>
+    <div class="products" id="addons-list"></div>
+  </section>
+
+  <section id="cart-section">
+    <h2>Twój koszyk</h2>
+    <div id="cart"></div>
+  </section>
+</main>
+
+<footer>
+  © 2025 11cards — Sklep z kartami sportowymi
+</footer>
+
+<script>
+const products = {
+  single: [
+    {id:1,name:"Jeremy Sochan Rookie Autograph",price:150,img:"https://i.imgur.com/9VbYh4W.jpeg"},
+    {id:2,name:"Lionel Messi Gold Limited Edition",price:200,img:"https://i.imgur.com/G2Z9qJQ.jpeg"},
+    {id:3,name:"Kylian Mbappé Match Attax 2024",price:90,img:"https://i.imgur.com/NcvHo8T.jpeg"}
+  ],
+  addons: [
+    {id:4,name:"Toploader (10 szt.)",price:25,img:"https://i.imgur.com/oS7j5qR.jpeg"},
+    {id:5,name:"Koszulki ochronne (100 szt.)",price:35,img:"https://i.imgur.com/KYbUO6M.jpeg"},
+    {id:6,name:"Album kolekcjonerski A4",price:60,img:"https://i.imgur.com/8d2LQnk.jpeg"}
+  ]
+};
+
+let cart = JSON.parse(localStorage.getItem('cart11')) || [];
+
+function updateCartCount(){
+  document.getElementById('cart-count').textContent = cart.reduce((a,b)=>a+b.qty,0);
+}
+function saveCart(){
+  localStorage.setItem('cart11',JSON.stringify(cart));
+  updateCartCount();
+}
+function addToCart(prod){
+  const existing = cart.find(p=>p.id===prod.id);
+  if(existing) existing.qty++;
+  else cart.push({...prod,qty:1});
+  saveCart();
+  alert(prod.name+" dodano do koszyka!");
+}
+function renderProducts(list,id){
+  const cont=document.getElementById(id);
+  cont.innerHTML='';
+  list.forEach(p=>{
+    const card=document.createElement('div');
+    card.className='card';
+    card.innerHTML=`
+      <img src="${p.img}" alt="${p.name}">
+      <div class="card-content">
+        <h3>${p.name}</h3>
+        <p class="price">${p.price} zł</p>
+        <button class="btn">Dodaj do koszyka</button>
+      </div>`;
+    card.querySelector('.btn').addEventListener('click',()=>addToCart(p));
+    cont.appendChild(card);
+  });
+}
+function renderCart(){
+  const cartDiv=document.getElementById('cart');
+  if(cart.length===0){cartDiv.innerHTML="<p>Koszyk jest pusty.</p>";return;}
+  let html="<table><thead><tr><th>Produkt</th><th>Cena</th><th>Ilość</th><th>Usuń</th></tr></thead><tbody>";
+  cart.forEach((p,i)=>{
+    html+=`<tr>
+      <td>${p.name}</td>
+      <td>${p.price} zł</td>
+      <td>${p.qty}</td>
+      <td><button class="btn" data-i="${i}">Usuń</button></td>
+    </tr>`;
+  });
+  const total = cart.reduce((sum,p)=>sum+p.price*p.qty,0);
+  html+=`</tbody><tfoot><tr><td colspan="4">Suma: ${total} zł</td></tr></tfoot></table>`;
+  html+=`<button class="pay-btn" id="payBtn">Zapłać BLIK</button>`;
+  cartDiv.innerHTML=html;
+  cartDiv.querySelectorAll('.btn[data-i]').forEach(btn=>{
+    btn.addEventListener('click',e=>{
+      const i=+e.target.dataset.i;
+      cart.splice(i,1);
+      saveCart();renderCart();
+    });
+  });
+  document.getElementById('payBtn').addEventListener('click',()=>{
+    alert('Symulacja płatności BLIK: dziękujemy za zakupy w 11cards!');
+    cart=[];saveCart();renderCart();
+  });
+}
+
+// Nawigacja
+document.querySelectorAll('.nav-btn').forEach(btn=>{
+  btn.addEventListener('click',()=>{
+    document.querySelectorAll('.nav-btn').forEach(b=>b.classList.remove('active'));
+    btn.classList.add('active');
+    const target=btn.dataset.target;
+    document.querySelectorAll('main section').forEach(sec=>sec.classList.remove('active'));
+    document.getElementById(target).classList.add('active');
+    if(target==='cart-section') renderCart();
+  });
+});
+
+// Inicjalizacja
+renderProducts(products.single,'single-list');
+renderProducts(products.addons,'addons-list');
+updateCartCount();
+</script>
+
+</body>
+</html>
